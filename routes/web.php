@@ -11,8 +11,19 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::resource('mahasiswa', MahasiswaController::class);
+    // Resource route untuk mahasiswa
+    Route::resource('mahasiswa', 'MahasiswaController')->except([
+        'show' // Kecualikan route show jika tidak digunakan
+    ]);
+    
+    // Atau jika ingin define manual:
+    /*
+    Route::get('/mahasiswa', 'MahasiswaController@index')->name('mahasiswa.index');
+    Route::post('/mahasiswa', 'MahasiswaController@store')->name('mahasiswa.store');
+    Route::get('/mahasiswa/{id}/edit', 'MahasiswaController@edit')->name('mahasiswa.edit');
     Route::put('/mahasiswa/{id}', 'MahasiswaController@update')->name('mahasiswa.update');
+    Route::delete('/mahasiswa/{id}', 'MahasiswaController@destroy')->name('mahasiswa.destroy');
+    */
 });
 Auth::routes();
 
