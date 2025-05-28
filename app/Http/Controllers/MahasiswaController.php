@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class MahasiswaController extends Controller
 {
@@ -113,43 +113,38 @@ class MahasiswaController extends Controller
     {
         DB::beginTransaction();
         try {
-            $mahasiswa = Mahasiswa::findOrFail($id);
+            // Cari mahasiswa dan user terkait
+            $mahasiswa = Mahasiswa::with('user')->findOrFail($id);
             
+            // Cek kepemilikan
             if ($mahasiswa->user_id !== auth()->id()) {
                 return redirect()->back()->with('error', 'Tidak bisa hapus data mahasiswa lain');
             }
 
-            // Hapus foto dari storage
+            // Hapus foto
             if ($mahasiswa->foto) {
                 Storage::disk('public')->delete($mahasiswa->foto);
             }
 
-            // Simpan user_id untuk dihapus
-            $userId = $mahasiswa->user_id;
-
-            // Hapus data mahasiswa
+            // Hapus mahasiswa
             $mahasiswa->delete();
 
-            // Hapus user dari database
-            DB::table('users')->where('id', $userId)->delete();
-
-            // Commit transaksi
-            DB::commit();
-
-            // Logout
+            // Hapus user (akan men-trigger logout)
+            $user = $mahasiswa->user;
             Auth::logout();
             session()->invalidate();
             session()->regenerateToken();
+            $user->delete();
+
+            DB::commit();
 
             return redirect()->route('login')
-                ->with('success', 'Akun Anda telah berhasil dihapus secara permanen');
+                ->with('success', 'Akun berhasil dihapus');
 
         } catch (\Exception $e) {
-            // Rollback jika terjadi error
             DB::rollback();
-            \Log::error('Error deleting account: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Gagal menghapus akun. Silakan coba lagi.');
+                ->with('error', 'Gagal menghapus akun: ' . $e->getMessage());
         }
     }
 }

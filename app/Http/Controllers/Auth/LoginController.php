@@ -46,11 +46,7 @@ class LoginController extends Controller
      */
     public function username()
     {
-        $login = request()->input('login');
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 
-                (is_numeric($login) ? 'nim' : 'name');
-        request()->merge([$field => $login]);
-        return $field;
+        return 'login';
     }
 
     /**
@@ -61,26 +57,29 @@ class LoginController extends Controller
      */
     protected function credentials(Request $request)
     {
-        $login = $request->input('login');
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 
-                (is_numeric($login) ? 'nim' : 'name');
+        $login = $request->login;
+        $field = is_numeric($login) ? 'nim' : 'name';
+        
         return [
             $field => $login,
-            'password' => $request->input('password')
+            'password' => $request->password
         ];
     }
 
     protected function sendFailedLoginResponse(Request $request)
     {
-        $login = $request->input('login');
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 
-                (is_numeric($login) ? 'nim' : 'name');
-
-        $message = 'Maaf, ';
-        if (!$this->existsInDatabase($field, $login)) {
-            $message .= ($field == 'nim' ? 'NIM' : 'Username') . ' tidak ditemukan';
+        $login = $request->login;
+        $field = is_numeric($login) ? 'nim' : 'name';
+        
+        // Cek apakah user exists
+        $user = \App\Models\User::where($field, $login)->first();
+        
+        if (!$user) {
+            $message = is_numeric($login) ? 
+                'NIM tidak ditemukan' : 
+                'Username tidak ditemukan';
         } else {
-            $message .= 'Password yang Anda masukkan salah';
+            $message = 'Password yang Anda masukkan salah';
         }
 
         throw ValidationException::withMessages([
@@ -88,14 +87,17 @@ class LoginController extends Controller
         ]);
     }
 
-    protected function existsInDatabase($field, $value)
-    {
-        return \App\Models\User::where($field, $value)->exists();
-    }
-
     protected function authenticated(Request $request, $user)
     {
         return redirect()->intended($this->redirectTo)
-            ->with('success', 'Selamat datang kembali, ' . $user->name);
+            ->with('success', "Selamat datang, {$user->name}!");
+    }
+
+    public function logout(Request $request)
+    {
+        $this->guard()->logout();
+        $request->session()->invalidate();
+        return redirect()->route('login')
+            ->with('success', 'Anda telah berhasil logout');
     }
 }

@@ -4,17 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MahasiswaController;
 use Illuminate\Support\Facades\Auth;
 
-Auth::routes(); // Tambahkan baris ini sebelum route mahasiswa
-
-Route::get('/', function () {
-    return redirect('/mahasiswa');
-});
+Auth::routes();
 
 Route::middleware(['auth'])->group(function () {
+    Route::redirect('/', '/mahasiswa');
     // Resource route untuk mahasiswa
-    Route::resource('mahasiswa', 'MahasiswaController')->except([
-        'show' // Kecualikan route show jika tidak digunakan
-    ]);
+    Route::resource('mahasiswa', MahasiswaController::class);
     
     // Atau jika ingin define manual:
     /*
@@ -25,6 +20,3 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/mahasiswa/{id}', 'MahasiswaController@destroy')->name('mahasiswa.destroy');
     */
 });
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

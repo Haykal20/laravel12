@@ -49,20 +49,19 @@ class User extends Authenticatable
         ];
     }
 
-    public function mahasiswa()
-    {
-        return $this->hasOne(Mahasiswa::class);
-    }
-
     protected static function boot()
     {
         parent::boot();
         
         static::deleting(function($user) {
-            // Force delete related mahasiswa
             if ($user->mahasiswa) {
                 $user->mahasiswa->delete();
             }
         });
+    }
+
+    public function mahasiswa()
+    {
+        return $this->hasOne(Mahasiswa::class);
     }
 }

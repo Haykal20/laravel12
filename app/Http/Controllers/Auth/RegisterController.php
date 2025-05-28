@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -30,7 +32,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/mahasiswa'; // ganti /home jadi /mahasiswa
+    protected $redirectTo = '/login';
 
     /**
      * Create a new controller instance.
@@ -109,10 +111,20 @@ class RegisterController extends Controller
                 'foto' => $fotoPath
             ]);
 
+            // Setelah create user dan mahasiswa, logout
+            Auth::logout();
+            
             return $user;
         } catch (\Exception $e) {
             \Log::error('Error uploading foto: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    protected function registered(Request $request, $user)
+    {
+        Auth::logout();
+        return redirect()->route('login')
+            ->with('success', 'Pendaftaran berhasil! Silakan login menggunakan NIM atau Username Anda.');
     }
 }

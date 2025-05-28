@@ -75,6 +75,21 @@
         <main class="py-4">
             @yield('content')
         </main>
+
+        <!-- Auto-hide Alert Script -->
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto hide alerts after 3 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 3000);
+            });
+        });
+        </script>
+
     </div>
 </body>
 </html>
